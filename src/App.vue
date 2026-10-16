@@ -1,6 +1,90 @@
 <template>
   <a-config-provider :theme="appTheme">
     <div class="app">
+      <!-- 桌布外的平铺涂鸦图案：固定在最底层（z-index: -1），不透明桌布自然盖住中间区域 -->
+      <svg class="page-pattern" aria-hidden="true" focusable="false">
+        <defs>
+          <!-- 黑桃 -->
+          <g id="pp-spade">
+            <path
+              d="M0 -10 C0 -10 -8 -3.6 -8 1.2 C-8 4 -5.7 6 -3 6 C-1.7 6 -0.6 5.4 0 4.5 C0.6 5.4 1.7 6 3 6 C5.7 6 8 4 8 1.2 C8 -3.6 0 -10 0 -10 Z"
+            />
+            <path
+              d="M0 3.5 L-2.6 11 C-2.9 11.7 -2.4 12 -1.8 12 L1.8 12 C2.4 12 2.9 11.7 2.6 11 Z"
+            />
+          </g>
+          <!-- 红桃 -->
+          <g id="pp-heart">
+            <path
+              d="M0 10 C0 10 -8 3.9 -8 -0.9 C-8 -3.7 -5.7 -5.7 -3 -5.7 C-1.7 -5.7 -0.6 -5 -0.1 -4.1 C0.4 -5 1.6 -5.7 3 -5.7 C5.7 -5.7 8 -3.7 8 -0.9 C8 3.9 0 10 0 10 Z"
+            />
+          </g>
+          <!-- 方块 -->
+          <g id="pp-diamond">
+            <path d="M0 -10 L7.2 0 L0 10 L-7.2 0 Z" />
+          </g>
+          <!-- 梅花 -->
+          <g id="pp-club">
+            <circle cx="0" cy="-4.6" r="3.9" />
+            <circle cx="-4.9" cy="2.8" r="3.9" />
+            <circle cx="4.9" cy="2.8" r="3.9" />
+            <circle cx="0" cy="0.6" r="2.6" />
+            <path
+              d="M0 2.5 L-2.4 10.6 C-2.7 11.4 -2.3 12 -1.6 12 L1.6 12 C2.3 12 2.7 11.4 2.4 10.6 Z"
+            />
+          </g>
+          <!-- 四角星 -->
+          <g id="pp-spark">
+            <path
+              d="M0 -8 C0.8 -2.5 2.5 -0.8 8 0 C2.5 0.8 0.8 2.5 0 8 C-0.8 2.5 -2.5 0.8 -8 0 C-2.5 -0.8 -0.8 -2.5 0 -8 Z"
+            />
+          </g>
+          <!-- 圆点 -->
+          <g id="pp-dot">
+            <circle cx="0" cy="0" r="2.4" />
+          </g>
+          <!-- 小扑克牌（菱形镂空） -->
+          <g id="pp-card">
+            <path
+              fill-rule="evenodd"
+              d="M-4.1 -9 H4.1 C5.4 -9 6.5 -7.9 6.5 -6.6 V6.6 C6.5 7.9 5.4 9 4.1 9 H-4.1 C-5.4 9 -6.5 7.9 -6.5 6.6 V-6.6 C-6.5 -7.9 -5.4 -9 -4.1 -9 Z M0 -5.6 L3.4 0 L0 5.6 L-3.4 0 Z"
+            />
+          </g>
+          <!-- 皇冠 -->
+          <g id="pp-crown">
+            <path d="M-7.5 5.6 L-8 -3.2 L-3.6 0.4 L0 -5.6 L3.6 0.4 L8 -3.2 L7.5 5.6 Z" />
+            <rect x="-6.6" y="6.6" width="13.2" height="2.6" rx="1.1" />
+          </g>
+          <!-- 320×320 无缝平铺：跨越边缘的图案在对边放置平移副本，消除接缝 -->
+          <pattern id="pp-tile" width="320" height="320" patternUnits="userSpaceOnUse">
+            <use href="#pp-spade" transform="translate(38 46) rotate(-22)" />
+            <use href="#pp-spark" transform="translate(152 28) rotate(10) scale(0.8)" />
+            <use href="#pp-heart" transform="translate(262 52) rotate(18) scale(0.85)" />
+            <use href="#pp-dot" transform="translate(252 84) scale(0.8)" />
+            <use href="#pp-diamond" transform="translate(94 104) rotate(-10) scale(0.7)" />
+            <use href="#pp-club" transform="translate(224 118) rotate(24) scale(1.05)" />
+            <use href="#pp-card" transform="translate(317 132) rotate(14) scale(0.85)" />
+            <use href="#pp-card" transform="translate(-3 132) rotate(14) scale(0.85)" />
+            <use href="#pp-dot" transform="translate(36 152)" />
+            <use href="#pp-spark" transform="translate(118 158) scale(0.5)" />
+            <use href="#pp-spark" transform="translate(178 188) scale(0.6)" />
+            <use href="#pp-dot" transform="translate(208 208) scale(1.3)" />
+            <use href="#pp-crown" transform="translate(250 234) rotate(16) scale(0.9)" />
+            <use href="#pp-heart" transform="translate(62 238) rotate(-28) scale(1.1)" />
+            <use href="#pp-club" transform="translate(148 262) rotate(-14) scale(0.78)" />
+            <use href="#pp-diamond" transform="translate(26 296) rotate(26) scale(0.95)" />
+            <use href="#pp-spade" transform="translate(296 296) rotate(34) scale(0.9)" />
+            <use href="#pp-club" transform="translate(200 336) rotate(20) scale(0.95)" />
+            <use href="#pp-club" transform="translate(200 16) rotate(20) scale(0.95)" />
+            <use href="#pp-heart" transform="translate(68 344) rotate(-16) scale(0.8)" />
+            <use href="#pp-heart" transform="translate(68 24) rotate(-16) scale(0.8)" />
+            <use href="#pp-spark" transform="translate(268 322) scale(0.7)" />
+            <use href="#pp-spark" transform="translate(268 2) scale(0.7)" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#pp-tile)" />
+      </svg>
+
       <header class="app-header">
         <div class="brand">
           <span class="brand-suit">♠</span>
@@ -456,11 +540,21 @@ onBeforeUnmount(() => {
   flex-direction: column;
   min-height: 100vh;
   padding-top: 20px;
-  background-color: var(--color-page-background);
   color: var(--color-text);
-  transition:
-    background-color 0.3s,
-    color 0.3s;
+  transition: color 0.3s;
+}
+
+/* 桌布外的平铺涂鸦图案层：垫在全部内容之下（body 的页面底色仍在其下） */
+.page-pattern {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  fill: var(--color-page-pattern-ink);
+  opacity: var(--color-page-pattern-opacity);
+  transition: opacity 0.5s;
 }
 
 .app-header {

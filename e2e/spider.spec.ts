@@ -171,3 +171,29 @@ test('全牌面亮出后，自动完成一键收尾', async ({ page }) => {
   await expect(page.locator('.stat-moves .value')).toHaveText('41');
   await expect(page.locator('.stat-score .value')).toHaveText('419');
 });
+
+test('桌布外背景为随主题换色的平铺图案', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('.option-easy').click();
+
+  // 图案层存在，且位于牌桌之前（渲染在全部内容之下，不遮挡桌布）
+  const pattern = page.locator('.page-pattern');
+  await expect(pattern).toBeAttached();
+  const patternBeforeBoard = await pattern.evaluate((el) => {
+    const board = document.querySelector('.board')!;
+    return (el.compareDocumentPosition(board) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+  });
+  expect(patternBeforeBoard).toBe(true);
+
+  // 亮色与暗色使用不同的图案墨色与透明度
+  const lightFill = await pattern.evaluate((el) => getComputedStyle(el).fill);
+  const lightOpacity = await pattern.evaluate((el) => getComputedStyle(el).opacity);
+
+  await page.locator('.theme-toggle').click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect.poll(() => pattern.evaluate((el) => getComputedStyle(el).fill)).not.toBe(lightFill);
+  // 透明度带 0.5s 过渡，轮询等待过渡完成后的最终值
+  await expect
+    .poll(() => pattern.evaluate((el) => getComputedStyle(el).opacity))
+    .not.toBe(lightOpacity);
+});
