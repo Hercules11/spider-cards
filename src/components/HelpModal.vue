@@ -29,7 +29,7 @@ const emit = defineEmits<{
   (event: 'update:open', value: boolean): void;
 }>();
 
-const RULES = ['build', 'run', 'flip', 'deal', 'complete', 'score', 'win'];
+const RULES = ['build', 'run', 'click', 'flip', 'deal', 'complete', 'score', 'win'];
 </script>
 
 <style scoped lang="less">

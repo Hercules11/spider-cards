@@ -165,7 +165,7 @@ describe('engine：提示', () => {
   });
 });
 
-describe('engine：双击自动移动', () => {
+describe('engine：单击自动移动', () => {
   it('优先同花落点，其次任意落点，空列需能翻牌', () => {
     const state = makeState({
       columns: [
@@ -174,19 +174,19 @@ describe('engine：双击自动移动', () => {
         [testCard('clubs', 10)]
       ]
     });
-    const move = findAutoMove(state, 0, 1);
+    const move = findAutoMove(state.columns, 0, 1);
     expect(move).toEqual({ from: 0, index: 1, to: 1 });
 
     // 无同花落点时用普通落点
     const unsuited = makeState({
       columns: [[testCard('spades', 9)], [testCard('clubs', 10)]]
     });
-    expect(findAutoMove(unsuited, 0, 0)).toEqual({ from: 0, index: 0, to: 1 });
+    expect(findAutoMove(unsuited.columns, 0, 0)).toEqual({ from: 0, index: 0, to: 1 });
 
     // 只有空列且不能翻牌时不动
     const toEmpty = makeState({
       columns: [[testCard('spades', 9)], []]
     });
-    expect(findAutoMove(toEmpty, 0, 0)).toBeNull();
+    expect(findAutoMove(toEmpty.columns, 0, 0)).toBeNull();
   });
 });

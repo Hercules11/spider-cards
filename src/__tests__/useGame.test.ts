@@ -80,7 +80,7 @@ describe('useGame：开局与操作', () => {
     expect(game.state.value!.columns[1]).toHaveLength(1);
   });
 
-  it('双击自动移动与提示透传', () => {
+  it('自动移动与提示透传', () => {
     const game = openGame();
     game.startNewGame('easy');
     game.state.value = makeState({

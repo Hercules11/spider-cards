@@ -199,13 +199,15 @@ export function findHint(state: GameState): Hint | null {
 }
 
 /**
- * 双击自动移动：在合法目标中优先同花延续、其次能翻暗牌，最后才用空列（且需能翻牌）
+ * 单击自动移动（快捷移动）：在合法目标中优先同花延续、其次能翻暗牌，
+ * 最后才用空列（且需能翻牌）；找不到落点返回 null
  */
-export function findAutoMove(state: GameState, from: number, index: number): CardMove | null {
-  if (state.status !== 'playing') {
-    return null;
-  }
-  const source = state.columns[from];
+export function findAutoMove(
+  columns: readonly Card[][],
+  from: number,
+  index: number
+): CardMove | null {
+  const source = columns[from];
   if (!source) {
     return null;
   }
@@ -215,11 +217,11 @@ export function findAutoMove(state: GameState, from: number, index: number): Car
   }
   const head = run[0]!;
   let best: { move: CardMove; weight: number } | null = null;
-  for (let to = 0; to < state.columns.length; to++) {
+  for (let to = 0; to < columns.length; to++) {
     if (to === from) {
       continue;
     }
-    const targetTop = state.columns[to]![state.columns[to]!.length - 1];
+    const targetTop = columns[to]![columns[to]!.length - 1];
     if (!canDropOn(targetTop, run)) {
       continue;
     }

@@ -10,7 +10,6 @@
           :style="{ height: columnHeight(colIndex) + 'px' }"
           :data-column="colIndex"
           :ref="(el) => setColumnEl(el, colIndex)"
-          @click="onColumnClick($event, colIndex)"
         >
           <div v-if="column.length === 0" class="empty-slot"></div>
           <div
@@ -20,7 +19,6 @@
             :class="cardClasses(colIndex, item)"
             :style="{ top: item.top + 'px', zIndex: item.index + 1 }"
             @pointerdown="onCardPointerDown($event, colIndex, item.index)"
-            @dblclick="onCardDoubleClick(colIndex, item.index)"
           >
             <CardView :card="item.card" />
           </div>
@@ -47,6 +45,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import type { Card, CardMove } from '@/types';
+import { findAutoMove } from '@/core/engine';
 import { canDropOn, getMovableRun } from '@/core/rules';
 import CardView from './CardView.vue';
 
@@ -60,15 +59,14 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (event: 'move', from: number, index: number, to: number): void;
-  (event: 'auto-move', from: number, index: number): void;
 }>();
 
 /** 正面牌之间的堆叠偏移系数（相对卡牌高度） */
 const FACE_UP_GAP = 0.3;
 /** 背面牌之间的堆叠偏移系数 */
 const FACE_DOWN_GAP = 0.13;
-/** 拖动判定阈值（px），小于该位移视为点击 */
-const DRAG_THRESHOLD = 6;
+/** 拖动判定阈值（px），小于该位移视为单击 */
+const DRAG_THRESHOLD = 8;
 
 interface LayoutItem {
   card: Card;
@@ -104,10 +102,11 @@ const boardRef = ref<HTMLElement | null>(null);
 const cardWidthPx = ref(80);
 const cardHeightPx = ref(112);
 const viewportHeight = ref(window.innerHeight);
+/** 牌桌内区实际高度（画布尺寸驱动堆叠压缩，保证加牌后画布不变形） */
+const boardInnerHeight = ref(0);
 
 const drag = ref<DragState | null>(null);
 const hoverColumn = ref<number | null>(null);
-const selection = ref<{ from: number; index: number } | null>(null);
 const shakeColumn = ref<number | null>(null);
 let shakeTimer: number | null = null;
 
@@ -117,10 +116,17 @@ function setColumnEl(el: unknown, col: number): void {
   columnEls[col] = el instanceof HTMLElement ? el : null;
 }
 
-// ---------- 尺寸测量（卡牌实际像素尺寸驱动堆叠布局与拖动层） ----------
+// ---------- 尺寸测量（画布与卡牌实际像素尺寸驱动堆叠布局与拖动层） ----------
 function measureCards(): void {
   viewportHeight.value = window.innerHeight;
-  const el = boardRef.value?.querySelector('.play-card');
+  const board = boardRef.value;
+  if (board) {
+    const styles = window.getComputedStyle(board);
+    const padTop = Number.parseFloat(styles.paddingTop) || 0;
+    const padBottom = Number.parseFloat(styles.paddingBottom) || 0;
+    boardInnerHeight.value = Math.max(0, board.clientHeight - padTop - padBottom);
+  }
+  const el = board?.querySelector('.play-card');
   if (el instanceof HTMLElement) {
     const rect = el.getBoundingClientRect();
     if (rect.height > 20 && rect.width > 10) {
@@ -156,10 +162,10 @@ onBeforeUnmount(() => {
   }
 });
 
-// ---------- 堆叠布局：超长列按比例压缩间距，尽量完整展示 ----------
+// ---------- 堆叠布局：超长列按比例压缩间距，保证画布尺寸不变 ----------
 const maxColumnHeight = computed(() => {
-  const boardTop = boardRef.value?.getBoundingClientRect().top ?? 200;
-  return Math.max(260, viewportHeight.value - boardTop - 64);
+  const available = boardInnerHeight.value || viewportHeight.value - 260;
+  return Math.max(cardHeightPx.value + 56, available);
 });
 
 const layouts = computed<ColumnLayout[]>(() => {
@@ -188,7 +194,7 @@ function columnHeight(colIndex: number): number {
   return layouts.value[colIndex]?.height ?? cardHeightPx.value;
 }
 
-// ---------- 提示 / 选中 / 拖动范围 ----------
+// ---------- 提示 / 拖动范围 ----------
 const hintRange = computed<Range | null>(() => {
   const hint = props.hintMove;
   if (!hint) {
@@ -200,19 +206,6 @@ const hintRange = computed<Range | null>(() => {
     return null;
   }
   return { from: hint.from, start: hint.index, end: hint.index + run.length - 1 };
-});
-
-const selectionRange = computed<Range | null>(() => {
-  const sel = selection.value;
-  if (!sel) {
-    return null;
-  }
-  const column = props.columns[sel.from];
-  const run = column ? getMovableRun(column, sel.index) : null;
-  if (!run) {
-    return null;
-  }
-  return { from: sel.from, start: sel.index, end: sel.index + run.length - 1 };
 });
 
 const hiddenRange = computed<Range | null>(() => {
@@ -229,7 +222,6 @@ function inRange(range: Range | null, colIndex: number, index: number): boolean 
 
 function cardClasses(colIndex: number, item: LayoutItem): Record<string, boolean> {
   return {
-    'is-selected': inRange(selectionRange.value, colIndex, item.index),
     'is-hinted': inRange(hintRange.value, colIndex, item.index),
     'is-hidden': inRange(hiddenRange.value, colIndex, item.index)
   };
@@ -341,7 +333,6 @@ function onPointerMove(event: PointerEvent): void {
       return;
     }
     d.active = true;
-    selection.value = null;
   }
   d.pointerX = event.clientX;
   d.pointerY = event.clientY;
@@ -369,8 +360,6 @@ function onPointerUp(event: PointerEvent): void {
   hoverColumn.value = null;
   if (d.run) {
     handleCardClick(d.from, d.index);
-  } else {
-    handleColumnBackgroundClick(d.from);
   }
 }
 
@@ -422,56 +411,26 @@ function attemptMove(from: number, index: number, to: number): boolean {
     triggerShake(to);
     return false;
   }
-  selection.value = null;
   emit('move', from, index, to);
   return true;
 }
 
-/** 卡牌点击（未发生拖动）：有选中时尝试移动，否则选中/取消选中 */
+/**
+ * 单击卡牌（未发生拖动）：在合法落点中自动选一处（同花延续优先）移过去；
+ * 没有落点时抖动原列提示。按住拖过阈值则走拖拽，落点由玩家自选
+ */
 function handleCardClick(from: number, index: number): void {
-  const sel = selection.value;
-  if (sel) {
-    if (sel.from === from && sel.index === index) {
-      selection.value = null;
-      return;
-    }
-    if (sel.from !== from && attemptMove(sel.from, sel.index, from)) {
-      return;
-    }
-  }
   const column = props.columns[from];
   const run = column ? getMovableRun(column, index) : null;
-  selection.value = run ? { from, index } : null;
-}
-
-/** 点击列空白区域：有选中时尝试移入该列 */
-function handleColumnBackgroundClick(col: number): void {
-  const sel = selection.value;
-  if (!sel) {
+  if (!run) {
     return;
   }
-  if (sel.from === col) {
-    selection.value = null;
+  const target = findAutoMove(props.columns, from, index);
+  if (!target) {
+    triggerShake(from);
     return;
   }
-  attemptMove(sel.from, sel.index, col);
-}
-
-function onColumnClick(event: MouseEvent, col: number): void {
-  const target = event.target as HTMLElement | null;
-  if (target?.closest('.play-card')) {
-    // 卡牌点击在 pointerup 中处理，避免重复触发
-    return;
-  }
-  handleColumnBackgroundClick(col);
-}
-
-function onCardDoubleClick(from: number, index: number): void {
-  if (props.disabled) {
-    return;
-  }
-  selection.value = null;
-  emit('auto-move', from, index);
+  emit('move', target.from, target.index, target.to);
 }
 </script>
 
@@ -479,12 +438,14 @@ function onCardDoubleClick(from: number, index: number): void {
 .board-wrap {
   display: flex;
   justify-content: center;
+  flex: 1;
   padding: 0 16px 20px;
 }
 
 .board {
   width: 100%;
   max-width: 1220px;
+  min-height: 340px;
   padding: 16px 14px 22px;
   border-radius: 18px;
   background:
@@ -567,16 +528,6 @@ function onCardDoubleClick(from: number, index: number): void {
 
   &:hover {
     filter: brightness(1.04);
-  }
-
-  &.is-selected {
-    transform: translateY(-6px);
-
-    :deep(.card) {
-      box-shadow:
-        0 0 0 2px var(--color-drop-ok),
-        0 6px 14px var(--color-shadow-card);
-    }
   }
 
   &.is-hinted {

@@ -40,6 +40,7 @@
     "title": "How to play",
     "build": "Any card can be placed on a card one rank higher (e.g. 8♦ onto 9♠)",
     "run": "A same-suit descending run (e.g. 9♠8♠7♠) moves as a group",
+    "click": "Click a run to send it to a fitting spot (same-suit first); drag to pick the destination yourself",
     "flip": "Face-down cards flip over when uncovered",
     "deal": "Click the stock pile to deal one card per column — not allowed while any column is empty",
     "complete": "A completed K→A suited run is collected automatically, +100 points",

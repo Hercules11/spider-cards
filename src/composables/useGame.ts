@@ -184,12 +184,12 @@ export function useGame() {
     return true;
   }
 
-  /** 双击自动移动：找不到落点返回 false */
+  /** 自动移动（单击卡牌）：找不到落点返回 false */
   function autoMove(from: number, index: number): boolean {
-    if (!state.value) {
+    if (!state.value || state.value.status !== 'playing') {
       return false;
     }
-    const target: CardMove | null = findAutoMove(state.value, from, index);
+    const target: CardMove | null = findAutoMove(state.value.columns, from, index);
     if (!target) {
       return false;
     }

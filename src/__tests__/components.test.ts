@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/vue';
 import { Button, Tooltip } from 'ant-design-vue';
 import { createI18n } from 'vue-i18n';
 import CardView from '@/components/CardView.vue';
+import GameBoard from '@/components/GameBoard.vue';
 import StatsBar from '@/components/StatsBar.vue';
 import zh from '@/lang/zh.json';
 import type { Card, Suit } from '@/types';
@@ -82,5 +83,49 @@ describe('StatsBar', () => {
 
     await fireEvent.click(screen.getByTestId('stock'));
     expect(emitted('deal')).toHaveLength(1);
+  });
+});
+
+describe('GameBoard', () => {
+  function renderBoard(columns: Card[][]) {
+    return render(GameBoard, {
+      props: { columns, hintMove: null, disabled: false }
+    });
+  }
+
+  async function clickCard(container: Element, colIndex: number): Promise<void> {
+    const column = container.querySelectorAll('.column')[colIndex]!;
+    const playCard = column.querySelector('.play-card') as HTMLElement;
+    await fireEvent.pointerDown(playCard, { pointerType: 'mouse', button: 0 });
+    await fireEvent.pointerUp(window);
+  }
+
+  it('单击牌组自动移到同花落点', async () => {
+    const { container, emitted } = renderBoard([
+      [card({ id: 'a', suit: 'spades', rank: 9 })],
+      [card({ id: 'b', suit: 'spades', rank: 10 })]
+    ]);
+    await clickCard(container, 0);
+    expect(emitted('move')).toEqual([[0, 0, 1]]);
+  });
+
+  it('无落点时抖动原列且不抛出移动', async () => {
+    const { container, emitted } = renderBoard([
+      [card({ id: 'a', suit: 'spades', rank: 9 })],
+      [card({ id: 'b', suit: 'hearts', rank: 8 })]
+    ]);
+    await clickCard(container, 0);
+    expect(emitted('move')).toBeUndefined();
+    expect(container.querySelectorAll('.column')[0]).toHaveClass('shake');
+  });
+
+  it('背面牌点击无响应', async () => {
+    const { container, emitted } = renderBoard([
+      [card({ id: 'a', suit: 'spades', rank: 9, faceUp: false })],
+      [card({ id: 'b', suit: 'spades', rank: 10 })]
+    ]);
+    await clickCard(container, 0);
+    expect(emitted('move')).toBeUndefined();
+    expect(container.querySelectorAll('.column')[0]).not.toHaveClass('shake');
   });
 });

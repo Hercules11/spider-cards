@@ -63,7 +63,6 @@
           :hint-move="hintMove"
           :disabled="isWon"
           @move="onMove"
-          @auto-move="onAutoMove"
         />
         <div v-else class="board-placeholder">
           <div class="placeholder-table">
@@ -129,7 +128,6 @@ const {
   dealsLeft,
   startNewGame,
   move,
-  autoMove,
   deal,
   undo,
   hint
@@ -194,11 +192,6 @@ function onHint(): void {
 function onMove(from: number, index: number, to: number): void {
   clearHint();
   move(from, index, to);
-}
-
-function onAutoMove(from: number, index: number): void {
-  clearHint();
-  autoMove(from, index);
 }
 
 function onUndo(): void {
@@ -478,14 +471,13 @@ onBeforeUnmount(() => {
 .board-placeholder {
   flex: 1;
   display: flex;
-  align-items: center;
   justify-content: center;
   padding: 0 16px 20px;
 
   .placeholder-table {
-    width: 100%;
+    flex: 1;
     max-width: 1220px;
-    height: 320px;
+    min-height: 340px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -502,16 +494,32 @@ onBeforeUnmount(() => {
 }
 
 .app-footer {
-  padding: 8px 0 14px;
-  text-align: center;
+  position: fixed;
+  right: 20px;
+  bottom: 18px;
+  z-index: 20;
 
   .github-link {
-    font-size: 1.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    font-size: 1.35rem;
     color: var(--color-text-muted);
-    transition: color 0.2s ease;
+    background-color: color-mix(in srgb, var(--color-surface) 90%, transparent);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 6px 16px var(--color-shadow-card);
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.2s ease;
 
     &:hover {
       color: var(--color-heading);
+      border-color: var(--color-border-strong);
+      transform: translateY(-2px);
     }
   }
 }

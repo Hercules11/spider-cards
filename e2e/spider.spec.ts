@@ -67,3 +67,54 @@ test('主题与语言持久化，刷新后恢复牌局', async ({ page }) => {
   await expect(page.locator('.column')).toHaveCount(10);
   await expect(page.getByRole('heading', { name: 'Pick a difficulty to start' })).toBeHidden();
 });
+
+test('单击自动移动；画布铺满到底部，GitHub 链接固定右下角', async ({ page }) => {
+  // 注入固定牌局：2♠ 应能自动落到 3♠ 上
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'spider-cards-saved-game',
+      JSON.stringify({
+        state: {
+          difficulty: 'easy',
+          columns: [
+            [{ id: 'a', suit: 'spades', rank: 2, faceUp: true }],
+            [{ id: 'b', suit: 'spades', rank: 3, faceUp: true }],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          stock: [],
+          completed: [],
+          score: 500,
+          moves: 0,
+          status: 'playing'
+        },
+        elapsedSeconds: 0
+      })
+    );
+  });
+  await page.goto('/');
+
+  // 单击（不拖动）第 1 列的牌 → 自动移入第 2 列
+  await page.locator('.column').nth(0).locator('.play-card').click();
+  await expect(page.locator('.column').nth(1).locator('.play-card')).toHaveCount(2);
+  await expect(page.locator('.stat-moves .value')).toHaveText('1');
+
+  // 画布下沿贴近页面底部（不留大片空白）
+  const viewport = page.viewportSize()!;
+  const boardBox = (await page.locator('.board').boundingBox())!;
+  expect(viewport.height - (boardBox.y + boardBox.height)).toBeLessThan(40);
+
+  // GitHub 链接以 fixed 固定在右下角
+  const footer = page.locator('.app-footer');
+  const position = await footer.evaluate((el) => getComputedStyle(el).position);
+  expect(position).toBe('fixed');
+  const box = (await footer.boundingBox())!;
+  expect(viewport.width - (box.x + box.width)).toBeLessThan(40);
+  expect(viewport.height - (box.y + box.height)).toBeLessThan(40);
+});
