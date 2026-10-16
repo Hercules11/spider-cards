@@ -1,0 +1,2 @@
+# 构建产物不参与 lint（dist 有意提交用于 Pages 部署，但压缩 bundle 不应被检查）
+dist/

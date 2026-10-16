@@ -1,0 +1,69 @@
+{
+  "title": "蜘蛛纸牌",
+  "subtitle": "经典 104 张纸牌接龙",
+  "difficulty": {
+    "label": "难度",
+    "easy": "简单",
+    "medium": "中等",
+    "hard": "困难",
+    "easy-tip": "1 种花色 · 8 组同花顺",
+    "medium-tip": "2 种花色 · 每色 4 组",
+    "hard-tip": "4 种花色 · 每色 2 组"
+  },
+  "stats": {
+    "score": "分数",
+    "moves": "步数",
+    "time": "时间",
+    "completed": "完成",
+    "deals": "发牌"
+  },
+  "actions": {
+    "undo": "撤销",
+    "hint": "提示",
+    "new-game": "新游戏",
+    "help": "规则",
+    "deal": "发牌"
+  },
+  "msg": {
+    "no-moves": "没有可用的移动，试试发牌或撤销",
+    "try-deal": "没有可用的移动，点击右上角发牌堆发牌",
+    "empty-column": "有空列时不能发牌",
+    "no-deals": "没有可发的牌了",
+    "restored": "已恢复上次的牌局"
+  },
+  "welcome": {
+    "title": "选择难度开始游戏",
+    "desc": "104 张牌 · 10 列牌桌 · 拼出 8 组 K→A 同花顺获胜",
+    "start": "开始游戏"
+  },
+  "rules": {
+    "title": "玩法规则",
+    "build": "任意花色的牌都能叠在比它大 1 的牌上（如 8♦ 放到 9♠ 上）",
+    "run": "同花色的连续递减序列（如 9♠8♠7♠）可以整组拖动",
+    "flip": "背面牌被移开后会自动翻开",
+    "deal": "点击右上方牌堆发牌，每次每列各发一张——有空列时不能发牌",
+    "complete": "凑齐 K→A 的同花顺会自动收走，+100 分",
+    "score": "初始 500 分，每次操作 -1 分，下限 0",
+    "win": "集齐 8 组同花顺即获胜",
+    "shortcut": "快捷键：U / Ctrl+Z 撤销 · H 提示 · D 发牌 · N 新游戏 · R 规则",
+    "close": "知道了"
+  },
+  "win": {
+    "title": "恭喜通关！",
+    "score": "最终分数",
+    "time": "用时",
+    "moves": "步数",
+    "best-score": "最佳分数",
+    "best-time": "最快用时",
+    "best-moves": "最少步数",
+    "games-won": "累计通关",
+    "again": "再来一局",
+    "change": "换个难度"
+  },
+  "confirm": {
+    "switch": "当前牌局进度将丢失，确定重新开局吗？",
+    "ok": "确定",
+    "cancel": "取消"
+  },
+  "footer": "在 GitHub 上查看源码"
+}

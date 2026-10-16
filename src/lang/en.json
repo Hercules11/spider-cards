@@ -1,0 +1,69 @@
+{
+  "title": "Spider Solitaire",
+  "subtitle": "Classic 104-card solitaire",
+  "difficulty": {
+    "label": "Difficulty",
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard",
+    "easy-tip": "1 suit · 8 sets",
+    "medium-tip": "2 suits · 4 sets each",
+    "hard-tip": "4 suits · 2 sets each"
+  },
+  "stats": {
+    "score": "Score",
+    "moves": "Moves",
+    "time": "Time",
+    "completed": "Completed",
+    "deals": "Deals"
+  },
+  "actions": {
+    "undo": "Undo",
+    "hint": "Hint",
+    "new-game": "New game",
+    "help": "Rules",
+    "deal": "Deal"
+  },
+  "msg": {
+    "no-moves": "No available moves — try dealing or undoing",
+    "try-deal": "No available moves — click the stock pile to deal",
+    "empty-column": "You can't deal while any column is empty",
+    "no-deals": "No deals left",
+    "restored": "Previous game restored"
+  },
+  "welcome": {
+    "title": "Pick a difficulty to start",
+    "desc": "104 cards · 10 columns · build 8 K→A suited runs to win",
+    "start": "Start game"
+  },
+  "rules": {
+    "title": "How to play",
+    "build": "Any card can be placed on a card one rank higher (e.g. 8♦ onto 9♠)",
+    "run": "A same-suit descending run (e.g. 9♠8♠7♠) moves as a group",
+    "flip": "Face-down cards flip over when uncovered",
+    "deal": "Click the stock pile to deal one card per column — not allowed while any column is empty",
+    "complete": "A completed K→A suited run is collected automatically, +100 points",
+    "score": "Start at 500 points, each action costs 1 point, minimum 0",
+    "win": "Collect 8 suited runs to win",
+    "shortcut": "Shortcuts: U / Ctrl+Z undo · H hint · D deal · N new game · R rules",
+    "close": "Got it"
+  },
+  "win": {
+    "title": "You won!",
+    "score": "Final score",
+    "time": "Time",
+    "moves": "Moves",
+    "best-score": "Best score",
+    "best-time": "Best time",
+    "best-moves": "Fewest moves",
+    "games-won": "Games won",
+    "again": "Play again",
+    "change": "Change difficulty"
+  },
+  "confirm": {
+    "switch": "Current progress will be lost. Start a new game?",
+    "ok": "OK",
+    "cancel": "Cancel"
+  },
+  "footer": "View source on GitHub"
+}

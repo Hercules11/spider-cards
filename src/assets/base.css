@@ -1,0 +1,118 @@
+:root {
+  color-scheme: light;
+  --color-accent: #2e8b57;
+  --color-accent-text: #ffffff;
+  --color-background: #ffffff;
+  --color-page-background: #f6f6f7;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f8f8f8;
+  --color-border: rgba(60, 60, 60, 0.12);
+  --color-border-strong: rgba(60, 60, 60, 0.29);
+  --color-heading: #2c3e50;
+  --color-text: #2c3e50;
+  --color-text-secondary: #4a4a56;
+  --color-text-muted: #ababb0;
+  --color-shadow-card: rgba(0, 0, 0, 0.12);
+
+  /* 牌桌绒布 */
+  --color-felt-start: #418f66;
+  --color-felt-end: #2c6e4a;
+  --color-felt-sheen: rgba(255, 255, 255, 0.07);
+  --color-felt-edge: rgba(0, 0, 0, 0.28);
+  --color-felt-label: rgba(255, 255, 255, 0.55);
+
+  /* 扑克牌 */
+  --color-card-face: #fcfbf8;
+  --color-card-border: rgba(22, 28, 36, 0.25);
+  --color-card-shadow: rgba(12, 22, 16, 0.38);
+  --color-card-back: #3b5bdb;
+  --color-card-back-border: rgba(255, 255, 255, 0.6);
+  --color-suit-red: #c0392b;
+  --color-suit-black: #2d3340;
+  --color-empty-slot: rgba(255, 255, 255, 0.3);
+  --color-drop-ok: #ffd76a;
+  --color-drop-bad: #ff8686;
+
+  /* 语义色种子：useTheme 读取后经 antd 色彩算法生成完整色阶 */
+  --color-seed-primary: #2f7a4f;
+  --color-seed-success: #63b041;
+  --color-seed-error: #df6b70;
+  --color-seed-warning: #e0a52e;
+  --color-seed-info: #4d9fdc;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --color-accent: #3da06a;
+  --color-accent-text: #ffffff;
+  --color-background: #111318;
+  --color-page-background: #111318;
+  --color-surface: #1b1f27;
+  --color-surface-soft: #242a33;
+  --color-border: rgba(210, 218, 230, 0.14);
+  --color-border-strong: rgba(210, 218, 230, 0.28);
+  --color-heading: #eef1f5;
+  --color-text: #d9dee7;
+  --color-text-secondary: #a8b0bd;
+  --color-text-muted: #777f8d;
+  --color-shadow-card: rgba(0, 0, 0, 0.35);
+
+  /* 牌桌绒布（暗色下压暗一档） */
+  --color-felt-start: #235c3e;
+  --color-felt-end: #173f2b;
+  --color-felt-sheen: rgba(255, 255, 255, 0.045);
+  --color-felt-edge: rgba(0, 0, 0, 0.5);
+  --color-felt-label: rgba(255, 255, 255, 0.45);
+
+  /* 扑克牌保持浅色纸面，暗色桌面上对比更清晰 */
+  --color-card-face: #f4f2ec;
+  --color-card-border: rgba(10, 14, 20, 0.4);
+  --color-card-shadow: rgba(0, 0, 0, 0.5);
+  --color-card-back: #33499f;
+  --color-card-back-border: rgba(255, 255, 255, 0.5);
+
+  /* 语义色种子沿用原值：dark 算法本身会压暗压灰 */
+  --color-seed-primary: #3da06a;
+  --color-seed-success: #52c41a;
+  --color-seed-error: #df6b70;
+  --color-seed-warning: #faad14;
+  --color-seed-info: #1890ff;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  font-weight: normal;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--color-text);
+  background: var(--color-background);
+  transition:
+    color 0.5s,
+    background-color 0.5s;
+  line-height: 1.6;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    'PingFang SC',
+    'Hiragino Sans GB',
+    'Microsoft YaHei',
+    sans-serif;
+  font-size: 15px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

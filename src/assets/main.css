@@ -1,0 +1,27 @@
+@import './base.css';
+
+#app {
+}
+
+/* 全局禁止选中（拖动卡牌时避免选中文本），输入框除外 */
+body {
+  user-select: none;
+}
+
+/* antd 弹窗按钮配色（与 typing-faster 保持一致的全局微调） */
+.custom-dialogue {
+  .ant-btn-primary {
+    color: var(--color-accent-text);
+  }
+
+  .ant-btn-primary:not(:disabled):hover,
+  .ant-btn-primary:not(:disabled):active {
+    color: var(--color-accent-text);
+  }
+}
+
+/* 提示消息在深色主题下跟随主题 */
+[data-theme='dark'] .ant-message-notice-content {
+  background: var(--color-surface-soft);
+  color: var(--color-text);
+}

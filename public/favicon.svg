@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect x="6" y="4" width="40" height="56" rx="6" fill="#f8f7f3" stroke="#3a3f4b" stroke-width="2.5"/>
+  <text x="14" y="24" font-size="20" font-family="Georgia, serif" fill="#5a2d82">♠</text>
+  <text x="26" y="50" font-size="26" font-family="Georgia, serif" fill="#5a2d82">♠</text>
+  <rect x="30" y="18" width="28" height="40" rx="5" fill="#3b5bdb" stroke="#ffffff" stroke-width="2"/>
+  <path d="M32 46 L56 22 M32 38 L48 22 M40 54 L56 38 M32 54 L56 30" stroke="rgba(255,255,255,.45)" stroke-width="2.4"/>
+</svg>
