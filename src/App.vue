@@ -49,6 +49,7 @@
         :deals="dealsLeft"
         :can-undo="canUndo"
         :stock-hint="hintDeal"
+        :busy="autoPhase !== null"
         @undo="onUndo"
         @hint="onHint"
         @new-game="requestNewGame"
@@ -61,7 +62,9 @@
           v-if="state"
           :columns="state.columns"
           :hint-move="hintMove"
-          :disabled="isWon"
+          :disabled="boardLocked"
+          :action="boardAction"
+          :completed-count="state.completed.length"
           @move="onMove"
         />
         <div v-else class="board-placeholder">
@@ -69,6 +72,33 @@
             <span class="placeholder-suits">♠ ♥ ♦ ♣</span>
           </div>
         </div>
+
+        <Transition name="auto-fade">
+          <div v-if="showAutoLayer" class="auto-layer">
+            <button
+              v-if="autoPhase !== 'playing'"
+              type="button"
+              class="auto-complete-btn"
+              :disabled="autoPhase === 'solving'"
+              @click="startAutoComplete"
+            >
+              <span class="auto-spark" aria-hidden="true">✦</span>
+              <span class="auto-label">{{
+                autoPhase === 'solving' ? $t('auto.solving') : $t('auto.button')
+              }}</span>
+              <span v-if="autoPhase !== 'solving'" class="auto-tip">{{ $t('auto.tip') }}</span>
+            </button>
+            <button
+              v-else
+              type="button"
+              class="auto-fast-btn"
+              :disabled="autoFast"
+              @click="autoFast = true"
+            >
+              ⏩ {{ $t('auto.fast') }}
+            </button>
+          </div>
+        </Transition>
       </div>
 
       <footer class="app-footer">
@@ -99,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { message as antMessage, Modal as AntModal } from 'ant-design-vue';
 import { BulbFilled, BulbOutlined, GithubFilled } from '@ant-design/icons-vue';
@@ -109,6 +139,7 @@ import GameBoard from './components/GameBoard.vue';
 import HelpModal from './components/HelpModal.vue';
 import StatsBar from './components/StatsBar.vue';
 import WinModal from './components/WinModal.vue';
+import { isFullyRevealed, solveGame } from './core/autocomplete';
 import { useGame } from './composables/useGame';
 import { useLocale } from './composables/useLocale';
 import { useTheme } from './composables/useTheme';
@@ -188,21 +219,116 @@ function onHint(): void {
   hintTimer = window.setTimeout(clearHint, 3200);
 }
 
+// ---------- 自动完成 ----------
+/** 牌桌动画编排标记：最近一次操作的类型 */
+const boardAction = ref<'new' | 'deal' | 'move' | 'undo'>('move');
+/** 自动完成流程：null 空闲 / solving 求解中 / playing 自动整理中 */
+const autoPhase = ref<'solving' | 'playing' | null>(null);
+const autoFast = ref(false);
+let autoTimer: number | null = null;
+
+/** 全部牌面亮出（牌堆空 + 桌面全正面）时可自动收尾 */
+const canAutoComplete = computed(() => !!state.value && isFullyRevealed(state.value));
+const showAutoLayer = computed(
+  () => !isWon.value && (canAutoComplete.value || autoPhase.value !== null)
+);
+const boardLocked = computed(() => isWon.value || autoPhase.value !== null);
+
+function cancelAutoPlay(): void {
+  if (autoTimer !== null) {
+    window.clearTimeout(autoTimer);
+    autoTimer = null;
+  }
+  autoPhase.value = null;
+  autoFast.value = false;
+}
+
+function startAutoComplete(): void {
+  if (autoPhase.value !== null || !state.value) {
+    return;
+  }
+  autoPhase.value = 'solving';
+  // 先让「计算中…」渲染出来，再做同步求解
+  window.setTimeout(() => {
+    if (autoPhase.value !== 'solving' || !state.value) {
+      return;
+    }
+    const result = solveGame(state.value);
+    if (result.status !== 'solved' || result.moves.length === 0) {
+      autoPhase.value = null;
+      promptAutoFailure();
+      return;
+    }
+    autoPhase.value = 'playing';
+    playSolution(result.moves);
+  }, 40);
+}
+
+function promptAutoFailure(): void {
+  AntModal.confirm({
+    title: t('auto.fail-title'),
+    content: t('auto.fail-body'),
+    okText: t('auto.restart'),
+    cancelText: t('auto.keep'),
+    centered: true,
+    wrapClassName: 'custom-dialogue',
+    onOk() {
+      startGame(state.value?.difficulty ?? 'easy');
+    }
+  });
+}
+
+/** 按求解方案逐步执行；收牌后多停一拍让动画播完 */
+function playSolution(moves: CardMove[]): void {
+  let cursor = 0;
+  const step = (): void => {
+    autoTimer = null;
+    if (autoPhase.value !== 'playing' || !state.value) {
+      return;
+    }
+    if (cursor >= moves.length) {
+      autoPhase.value = null;
+      autoFast.value = false;
+      return;
+    }
+    const beforeCompleted = state.value.completed.length;
+    const moveStep = moves[cursor++]!;
+    boardAction.value = 'move';
+    if (!move(moveStep.from, moveStep.index, moveStep.to)) {
+      // 防御：求解方案应始终合法；异常时直接结束
+      autoPhase.value = null;
+      autoFast.value = false;
+      return;
+    }
+    const collected = state.value.completed.length > beforeCompleted;
+    const base = autoFast.value ? 80 : 240;
+    const pause = collected ? base + (autoFast.value ? 240 : 700) : base;
+    autoTimer = window.setTimeout(step, pause);
+  };
+  step();
+}
+
 // ---------- 游戏操作 ----------
 function onMove(from: number, index: number, to: number): void {
+  boardAction.value = 'move';
   clearHint();
   move(from, index, to);
 }
 
 function onUndo(): void {
+  if (autoPhase.value !== null) {
+    return;
+  }
+  boardAction.value = 'undo';
   clearHint();
   undo();
 }
 
 function onDeal(): void {
-  if (!state.value || isWon.value) {
+  if (!state.value || isWon.value || autoPhase.value !== null) {
     return;
   }
+  boardAction.value = 'deal';
   const failure = deal();
   if (failure === 'empty-column') {
     antMessage.warning(t('msg.empty-column'));
@@ -215,6 +341,8 @@ function onDeal(): void {
 
 // ---------- 开局 / 换难度 ----------
 function startGame(difficulty: Difficulty): void {
+  cancelAutoPlay();
+  boardAction.value = 'new';
   clearHint();
   startNewGame(difficulty);
   difficultyOpen.value = false;
@@ -270,7 +398,7 @@ function onKeydown(event: KeyboardEvent): void {
   ) {
     return;
   }
-  if (difficultyOpen.value || winOpen.value) {
+  if (difficultyOpen.value || winOpen.value || autoPhase.value !== null) {
     return;
   }
   const key = event.key.toLowerCase();
@@ -318,6 +446,7 @@ onBeforeUnmount(() => {
   if (hintTimer !== null) {
     window.clearTimeout(hintTimer);
   }
+  cancelAutoPlay();
 });
 </script>
 
@@ -463,9 +592,109 @@ onBeforeUnmount(() => {
 }
 
 .board-area {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+.auto-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.auto-complete-btn {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 15px 32px;
+  border: 1px solid color-mix(in srgb, var(--color-drop-ok) 55%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--color-surface) 74%, transparent);
+  backdrop-filter: blur(6px);
+  color: var(--color-heading);
+  cursor: pointer;
+  animation: auto-pulse 2.2s ease-in-out infinite;
+  transition: transform 0.15s ease;
+
+  .auto-spark {
+    font-size: 1rem;
+    color: var(--color-drop-ok);
+  }
+
+  .auto-label {
+    font-size: 1.18rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .auto-tip {
+    font-size: 0.76rem;
+    color: var(--color-text-muted);
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.02);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.85;
+    animation: none;
+  }
+}
+
+.auto-fast-btn {
+  pointer-events: auto;
+  padding: 8px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+  backdrop-filter: blur(6px);
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: var(--color-heading);
+    border-color: var(--color-border-strong);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+}
+
+.auto-fade-enter-active,
+.auto-fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.auto-fade-enter-from,
+.auto-fade-leave-to {
+  opacity: 0;
+}
+
+@keyframes auto-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 12px 34px var(--color-shadow-card),
+      0 0 0 6px color-mix(in srgb, var(--color-drop-ok) 14%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 12px 34px var(--color-shadow-card),
+      0 0 0 14px color-mix(in srgb, var(--color-drop-ok) 6%, transparent);
+  }
 }
 
 .board-placeholder {

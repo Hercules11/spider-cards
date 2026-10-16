@@ -39,11 +39,12 @@
   "rules": {
     "title": "How to play",
     "build": "Any card can be placed on a card one rank higher (e.g. 8♦ onto 9♠)",
-    "run": "A same-suit descending run (e.g. 9♠8♠7♠) moves as a group",
+    "run": "A descending run (e.g. 9♠8♥7♦, suits may differ) can be dragged as a group",
     "click": "Click a run to send it to a fitting spot (same-suit first); drag to pick the destination yourself",
     "flip": "Face-down cards flip over when uncovered",
     "deal": "Click the stock pile to deal one card per column — not allowed while any column is empty",
     "complete": "A completed K→A suited run is collected automatically, +100 points",
+    "auto": "Once every card is face up, an Auto-finish button appears in the center — one tap closes out the game",
     "score": "Start at 500 points, each action costs 1 point, minimum 0",
     "win": "Collect 8 suited runs to win",
     "shortcut": "Shortcuts: U / Ctrl+Z undo · H hint · D deal · N new game · R rules",
@@ -60,6 +61,16 @@
     "games-won": "Games won",
     "again": "Play again",
     "change": "Change difficulty"
+  },
+  "auto": {
+    "button": "Auto-finish",
+    "tip": "All cards revealed — finish in one tap",
+    "solving": "Solving…",
+    "fast": "Speed up",
+    "fail-title": "Can't auto-finish",
+    "fail-body": "No winning line was found from this position (unsolvable or too complex). Start a new game?",
+    "restart": "New game",
+    "keep": "Keep playing"
   },
   "confirm": {
     "switch": "Current progress will be lost. Start a new game?",

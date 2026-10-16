@@ -8,10 +8,10 @@ describe('rules：可移动牌组', () => {
     expect(getMovableRun(column, 1)).toBeNull();
   });
 
-  it('同花递减序列整组可动，花色变化处截断', () => {
-    const column = [testCard('spades', 9), testCard('spades', 8), testCard('hearts', 7)];
+  it('递减序列整组可动（不限花色），花色不同不会截断', () => {
+    const column = [testCard('spades', 9), testCard('hearts', 8), testCard('diamonds', 7)];
     const run = getMovableRun(column, 0);
-    expect(run?.map((card) => card.rank)).toEqual([9, 8]);
+    expect(run?.map((card) => card.rank)).toEqual([9, 8, 7]);
   });
 
   it('点数不连续处截断（9♠7♠ 只能移动 9♠）', () => {

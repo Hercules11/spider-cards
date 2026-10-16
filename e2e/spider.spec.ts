@@ -118,3 +118,56 @@ test('单击自动移动；画布铺满到底部，GitHub 链接固定右下角'
   expect(viewport.width - (box.x + box.width)).toBeLessThan(40);
   expect(viewport.height - (box.y + box.height)).toBeLessThan(40);
 });
+
+test('全牌面亮出后，自动完成一键收尾', async ({ page }) => {
+  // 注入接近通关的全明牌局：7 组已收 + 断成两段的黑桃同花顺
+  await page.addInitScript(() => {
+    let seq = 0;
+    const card = (suit: string, rank: number) => ({
+      id: `auto-${suit}-${rank}-${seq++}`,
+      suit,
+      rank,
+      faceUp: true
+    });
+    const descend = (suit: string, from: number, to: number) =>
+      Array.from({ length: from - to + 1 }, (_, i) => card(suit, from - i));
+    localStorage.setItem(
+      'spider-cards-saved-game',
+      JSON.stringify({
+        state: {
+          difficulty: 'easy',
+          columns: [
+            descend('spades', 9, 1), // 9♠…A♠
+            descend('spades', 13, 10), // K♠…10♠
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          stock: [],
+          completed: ['spades', 'hearts', 'diamonds', 'clubs', 'spades', 'hearts', 'diamonds'],
+          score: 320,
+          moves: 40,
+          status: 'playing'
+        },
+        elapsedSeconds: 120
+      })
+    );
+  });
+  await page.goto('/');
+
+  // 全明牌 → 屏幕中央出现「自动完成」
+  const autoButton = page.getByRole('button', { name: /自动完成/ });
+  await expect(autoButton).toBeVisible();
+
+  await autoButton.click();
+  // 自动播放收尾动画后通关：8 槽填满、计分结算
+  await expect(page.locator('.win-title')).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('.slot.filled')).toHaveCount(8);
+  await expect(page.locator('.stat-moves .value')).toHaveText('41');
+  await expect(page.locator('.stat-score .value')).toHaveText('419');
+});

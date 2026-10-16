@@ -16,10 +16,10 @@ export const START_SCORE = 500;
 export const COMPLETE_SCORE = 100;
 
 /**
- * 取从 index 起可以整体移动的牌组：
- * 起点必须正面；向后延伸直到花色变化或点数不连续为止。
- * 注意这是「前缀」语义——9♠8♠7♥ 里点 9♠ 只能带走 9♠8♠；
- * 不允许拆开同花顺中的一段（如只移动 9♠ 而不带 8♠），与经典规则一致
+ * 取从 index 起可以整体移动的牌组（微软版规则）：
+ * 起点必须正面，向后延伸直到点数不连续或遇到背面牌为止——不限花色，
+ * 例如 9♠8♥7♦ 可以整组拖动。注意这是「前缀」语义：拖动起点即带走
+ * 整段直到断点，中途不能只取其中一部分
  */
 export function getMovableRun(column: readonly Card[], index: number): Card[] | null {
   const first = column[index];
@@ -30,7 +30,7 @@ export function getMovableRun(column: readonly Card[], index: number): Card[] | 
   for (let i = index + 1; i < column.length; i++) {
     const prev = column[i - 1]!;
     const current = column[i]!;
-    if (!current.faceUp || current.suit !== prev.suit || current.rank !== prev.rank - 1) {
+    if (!current.faceUp || current.rank !== prev.rank - 1) {
       break;
     }
     run.push(current);

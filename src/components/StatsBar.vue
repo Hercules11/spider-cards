@@ -20,9 +20,11 @@
             v-for="slot in WINS_NEEDED"
             :key="slot"
             class="slot"
+            :data-slot-index="slot - 1"
             :class="{
               filled: completed[slot - 1] !== undefined,
-              red: completed[slot - 1] ? isRedSuit(completed[slot - 1]!) : false
+              red: completed[slot - 1] ? isRedSuit(completed[slot - 1]!) : false,
+              'just-filled': justFilled === slot - 1
             }"
           >
             <template v-if="completed[slot - 1]">{{ SUIT_SYMBOLS[completed[slot - 1]!] }}</template>
@@ -32,19 +34,19 @@
     </div>
 
     <div class="action-group">
-      <a-button size="small" :disabled="!canUndo" @click="emit('undo')">
+      <a-button size="small" :disabled="busy || !canUndo" @click="emit('undo')">
         <UndoOutlined />
         {{ $t('actions.undo') }}
       </a-button>
-      <a-button size="small" @click="emit('hint')">
+      <a-button size="small" :disabled="busy" @click="emit('hint')">
         <BulbOutlined />
         {{ $t('actions.hint') }}
       </a-button>
-      <a-button size="small" @click="emit('new-game')">
+      <a-button size="small" :disabled="busy" @click="emit('new-game')">
         <ReloadOutlined />
         {{ $t('actions.new-game') }}
       </a-button>
-      <a-button size="small" @click="emit('help')">
+      <a-button size="small" :disabled="busy" @click="emit('help')">
         <QuestionCircleOutlined />
         {{ $t('actions.help') }}
       </a-button>
@@ -56,7 +58,7 @@
           type="button"
           class="stock"
           data-testid="stock"
-          :disabled="deals <= 0"
+          :disabled="busy || deals <= 0"
           :aria-label="$t('actions.deal')"
           @click="emit('deal')"
         >
@@ -74,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import {
   BulbOutlined,
   QuestionCircleOutlined,
@@ -95,6 +97,8 @@ const props = defineProps<{
   canUndo: boolean;
   /** 提示建议发牌时牌堆脉冲高亮 */
   stockHint: boolean;
+  /** 自动整理等流程进行中：锁定全部操作按钮 */
+  busy?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -106,6 +110,33 @@ const emit = defineEmits<{
 }>();
 
 const timeText = computed(() => formatDuration(props.seconds));
+
+/** 最近新填上的槽位（弹跳高亮），避免刷新恢复时全部槽位一起弹 */
+const justFilled = ref(-1);
+let popTimer: number | null = null;
+
+watch(
+  () => props.completed.length,
+  (length, previous) => {
+    if (length <= previous) {
+      return;
+    }
+    justFilled.value = length - 1;
+    if (popTimer !== null) {
+      window.clearTimeout(popTimer);
+    }
+    popTimer = window.setTimeout(() => {
+      justFilled.value = -1;
+      popTimer = null;
+    }, 480);
+  }
+);
+
+onBeforeUnmount(() => {
+  if (popTimer !== null) {
+    window.clearTimeout(popTimer);
+  }
+});
 </script>
 
 <style scoped lang="less">
@@ -175,6 +206,10 @@ const timeText = computed(() => formatDuration(props.seconds));
 
     &.red {
       color: var(--color-suit-red);
+    }
+
+    &.just-filled {
+      animation: slot-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
   }
 }
@@ -280,6 +315,20 @@ const timeText = computed(() => formatDuration(props.seconds));
   }
   50% {
     transform: translateY(-4px);
+  }
+}
+
+@keyframes slot-pop {
+  0% {
+    transform: scale(0.35);
+    opacity: 0.2;
+  }
+  70% {
+    transform: scale(1.22);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
