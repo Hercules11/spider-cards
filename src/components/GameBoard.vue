@@ -539,7 +539,9 @@ function playStockFlight(added: Array<{ id: string; el: HTMLElement }>): void {
     const target = entry.el.getBoundingClientRect();
     const dx = stockRect.left + stockRect.width / 2 - (target.left + target.width / 2);
     const dy = stockRect.top + stockRect.height / 2 - (target.top + target.height / 2);
-    entry.el.animate(
+    // 飞行途中浮到最上层（与滑移动画同一档 z-index: 80），避免被途经列的牌堆遮挡
+    entry.el.classList.add('card-flying');
+    const animation = entry.el.animate(
       [
         { transform: `translate(${dx}px, ${dy}px) rotate(-6deg)`, opacity: 0.6 },
         { transform: 'translate(0px, 0px) rotate(0deg)', opacity: 1 }
@@ -551,6 +553,9 @@ function playStockFlight(added: Array<{ id: string; el: HTMLElement }>): void {
         fill: 'backwards'
       }
     );
+    const cleanup = () => entry.el.classList.remove('card-flying');
+    animation.onfinish = cleanup;
+    animation.oncancel = cleanup;
   });
 }
 

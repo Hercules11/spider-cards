@@ -35,6 +35,25 @@ test('发牌与撤销', async ({ page }) => {
   await expect(page.locator('.stat-moves .value')).toHaveText('0');
 });
 
+test('发牌飞行时牌浮到最上层，不被其他列的牌堆遮挡', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('.option-medium').click();
+  await page.getByTestId('stock').click();
+
+  // 飞行中的牌带 card-flying 类（z-index: 80），高于普通牌的「列内序号 + 1」
+  const flying = page.locator('.play-card.card-flying');
+  await expect(flying.first()).toBeAttached();
+  expect(await flying.first().evaluate((el) => getComputedStyle(el).zIndex)).toBe('80');
+  const staticZ = await page
+    .locator('.play-card:not(.card-flying)')
+    .first()
+    .evaluate((el) => getComputedStyle(el).zIndex);
+  expect(Number(staticZ)).toBeLessThan(80);
+
+  // 动画结束后清理类，恢复常规层级
+  await expect(flying).toHaveCount(0, { timeout: 3000 });
+});
+
 test('提示与规则弹窗', async ({ page }) => {
   await page.goto('/');
   await page.locator('.option-hard').click();
